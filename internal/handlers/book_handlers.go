@@ -1,55 +1,66 @@
 package handlers
 
-import(
+import (
+	"TODOLIST/internal/models"
+	"TODOLIST/internal/repository"
+
 	"github.com/gin-gonic/gin"
 )
 
-type Book struct{
-	ID string
-	Title string
-	Author string
+type BookHandler struct {
+	Repo repository.BookRepository
 }
 
-var books = []Book{
-	{"1","Book1", "Author1"},
-	{"2","Book2", "Author2"},
-	{"3","Book3", "Author3"},
-}
+var books = []models.Book{}
 
-func GetBooks(c *gin.Context){
+func NewBookHandler(repo repository.BookRepository) *BookHandler {
+	return &BookHandler{Repo: repo}
+}
+func (h *BookHandler) GetBooks(c *gin.Context) {
+
+	books, err := h.Repo.GetAllBooks()
+
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+	}
 	c.JSON(200, books)
 }
 
-func GetBookByID(c *gin.Context){
+func GetBookByID(c *gin.Context) {
 	id := c.Param("id")
-	for _,book := range books{
-		if book.ID == id{
+	for _, book := range books {
+		if book.ID == id {
 			c.JSON(200, book)
 			return
 		}
 	}
 }
 
-func CreateBook(c *gin.Context){
-	var newBook Book
+func (h *BookHandler) CreateBook(c *gin.Context) {
+	var newBook models.Book
 
-	if err := c.ShouldBindJSON(&newBook); err != nil{
+	if err := c.ShouldBindJSON(&newBook); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	books = append(books, newBook)
-	c.JSON(201, newBook)
+	createdBook, err := h.Repo.CreateBook(newBook)
+
+	if err != nil {
+		c.JSON(500, gin.H{"error": "could not create book"})
+	}
+
+	c.JSON(201, createdBook)
 }
 
-func UpdateBook(c *gin.Context){
+func UpdateBook(c *gin.Context) {
 	id := c.Param("id")
-	var updateBook Book
-	if err := c.ShouldBindJSON(&updateBook); err != nil{
+	var updateBook models.Book
+	if err := c.ShouldBindJSON(&updateBook); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	for index, book := range books{
-		if book.ID == id{
+	for index, book := range books {
+		if book.ID == id {
 			books[index] = updateBook
 			c.JSON(200, updateBook)
 			return
@@ -59,10 +70,10 @@ func UpdateBook(c *gin.Context){
 
 }
 
-func DeleteBook(c *gin.Context){
+func DeleteBook(c *gin.Context) {
 	id := c.Param("id")
-	for index, book := range books{
-		if book.ID == id{
+	for index, book := range books {
+		if book.ID == id {
 			books = append(books[:index], books[index+1:]...)
 			c.JSON(200, gin.H{"message": "Book deleted"})
 			return

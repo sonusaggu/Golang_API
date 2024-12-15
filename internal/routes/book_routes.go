@@ -1,17 +1,18 @@
-package route
+package routes
 
 import (
-	"github.com/gin-gonic/gin"
 	"TODOLIST/internal/handlers"
+
+	"github.com/gin-gonic/gin"
 )
 
+func RegisterRoutes(r *gin.Engine, handler *handlers.BookHandler) {
 
-func RegisterRoutes(r *gin.Engine){
 	bookGroup := r.Group("/books")
 	{
-		bookGroup.GET("/", handlers.GetBooks)
+		bookGroup.GET("/", handler.GetBooks)
 		bookGroup.GET("/:id", handlers.GetBookByID)
-		bookGroup.POST("/", handlers.CreateBook)
+		bookGroup.POST("/", handler.CreateBook)
 		bookGroup.PUT("/:id", handlers.UpdateBook)
 		bookGroup.DELETE("/:id", handlers.DeleteBook)
 	}
